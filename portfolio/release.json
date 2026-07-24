@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "status": "planned",
+  "provider": "Azure",
+  "workflow": null,
+  "deploymentTarget": null,
+  "paidResource": true,
+  "costApprovalRequired": true
+}
