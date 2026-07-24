@@ -1,36 +1,50 @@
-# [Project Name]
+# Sepsis Early Warning
 
-[One-sentence description of what this does and why it matters, framed around the real-world use case — not the algorithm.]
+An educational ICU early-warning project: local research uses the MIMIC-IV Demo dataset; the deployable dashboard uses synthetic data only. **It is not a clinical device and must not guide care.**
 
-## Problem
-[What operational/business problem does this solve? Who would actually use this?]
+## Data and safety
 
-## Data
-- **Source:** [dataset name + where it comes from]
-- **Access:** [open / requires credentialing — link to how]
-- **Size/shape:** [rows, time range, entities — whatever orients the reader]
+Download the open [MIMIC-IV Demo](https://physionet.org/content/mimic-iv-demo/) locally into `data/`. Nothing under `data/`, nor generated features, models, MLflow runs, metrics, or SHAP exports, may be committed or deployed. The full MIMIC-IV dataset additionally requires credentialed access and a signed DUA.
 
 ## Architecture
-[Diagram — even a simple one made in draw.io/excalidraw exported as PNG, or an ASCII/mermaid diagram. Show data flow: source → processing → model → API → deployment.]
 
-## Key Results
-[The metrics that matter for this problem — not just accuracy. E.g. for fraud: precision/recall at a chosen threshold, latency. For healthcare: AUROC + calibration + a SHAP example. Be specific and honest, including failure modes.]
+`local demo data → pandas hourly features → XGBoost + calibration → local MLflow/SHAP`
 
-## How to Run Locally
+`synthetic replay → Flask API → synthetic timeline dashboard`
+
+The Flask dashboard is deliberately dependency-light and refreshes its synthetic case every 30 seconds. Azure Container Apps hosts only this synthetic surface.
+
+## Local use
+
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
-docker compose up --build
-```
-[Any additional setup — env vars, data download steps, etc.]
-
-## How to Deploy (Azure)
-```bash
-# [exact commands or reference to infra/ scripts]
+python -m venv .venv && source .venv/bin/activate
+pip install -e '.[dev,research]'
+pytest -q
+python -m scripts.train_synthetic
+MODEL_PATH=$PWD/artifacts/synthetic-model.joblib flask --app src.app run
 ```
 
-## Tech Stack
-[Bullet list — be specific about versions/services used, this is what gets scanned first]
+For a synthetic-only dashboard without any local model, omit `MODEL_PATH`. Visit `http://localhost:5000`.
 
-## What I'd Improve Next
-[This section matters — shows you understand the limits of your own work. Be specific: what's the biggest gap, what would production-hardening actually require, what didn't you have time/data for.]
+## MIMIC Demo workflow
+
+1. Keep downloaded files in `data/mimic-iv-demo/` only.
+2. Create a local `sepsis_onsets.csv` with `stay_id,sepsis_onset` from reviewed, versioned MIMIC-code Sepsis-3 logic. This repository deliberately does not guess clinical labels.
+3. Run `python -m scripts.build_features --demo-root data/mimic-iv-demo --onsets data/sepsis_onsets.csv`; this reads CSV files in chunks and writes ignored local Parquet output.
+4. Use `build_hourly_features`; perform patient-level splits before `train`.
+5. Run `python -m scripts.train_local`. It performs a patient-level held-out split, logs AUROC/AUPRC/Brier/ECE to local MLflow, and writes ignored model/metrics files.
+6. Run `explain` locally and publish only synthetic illustrations, never real patient-level SHAP output.
+
+## API
+
+- `POST /v1/score` — validated observation feature vector; response includes risk, risk band, drivers, mode, and disclaimer.
+- `GET /v1/demo/timeline/{synthetic_id}` — synthetic replay timeline.
+- `GET /healthz` — liveness endpoint.
+
+## Deployment
+
+Build locally with `docker compose -f docker/docker-compose.yml up --build`. `infra/main.bicep` defines the low-cost East US 2 synthetic deployment: Container Apps, ACR Basic, Storage, Application Insights, and Log Analytics. Add Entra authentication and subscription budget alerts before sharing it. Container Apps can scale to zero; estimated low-traffic demo cost is roughly $7–20/month, excluding any future private research environment.
+
+## Evaluation requirements
+
+Report AUROC, AUPRC, Brier score, calibration plot, threshold sensitivity/PPV and alert burden—not AUROC alone. Include cohort definition, leakage controls, data version, limitations, and subgroup analysis with confidence intervals before claiming performance.

@@ -1,0 +1,14 @@
+.git
+.venv
+data
+artifacts
+mlruns
+reports
+__pycache__
+.pytest_cache
+.mypy_cache
+.env
+tests
+notebooks
+AGENTS.md
+CLAUDE.md

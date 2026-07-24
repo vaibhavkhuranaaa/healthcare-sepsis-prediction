@@ -1,1 +1,7 @@
-# TODO: implement per CLAUDE.md
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"

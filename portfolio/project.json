@@ -1,19 +1,59 @@
 {
-  "version": 1,
+  "version": 2,
   "slug": "healthcare-sepsis-prediction",
   "title": "Sepsis Early Warning",
   "summary": "Synthetic-demo and local-research workflow for ICU deterioration-risk modeling with calibration and safety controls.",
   "outcome": "Release-pending portfolio project; only the synthetic surface is eligible for deployment.",
-  "industries": ["Healthcare technology"],
-  "categories": ["AI/ML", "Analytics", "Cloud"],
-  "stack": ["Python", "XGBoost", "Flask", "MLflow", "Docker", "Azure"],
+  "industries": [
+    "Healthcare technology"
+  ],
+  "categories": [
+    "AI/ML",
+    "Analytics",
+    "Cloud"
+  ],
+  "stack": [
+    "Python",
+    "XGBoost",
+    "Flask",
+    "MLflow",
+    "Docker",
+    "Azure"
+  ],
   "githubUrl": "https://github.com/vaibhavkhuranaaa/healthcare-sepsis-prediction",
   "liveUrl": null,
-  "deployment": {"provider": "Azure", "status": "release-pending", "runtime": "Synthetic Flask dashboard"},
-  "metrics": ["AUROC, AUPRC, Brier score, and calibration are required before research-result claims"],
-  "stages": ["Synthetic replay", "Feature engineering", "Modeling", "Calibration", "Synthetic dashboard"],
-  "architecture": ["Synthetic data", "Hourly features", "Calibrated model", "Flask API", "Synthetic UI"],
-  "evaluation": ["Patient-level splits, leakage controls, calibration, subgroup analysis, and confidence intervals required"],
-  "operationalTradeoffs": ["Clinical safety requires an explicit separation between research data and deployable synthetic demonstrations"],
+  "deployment": {
+    "provider": "Azure",
+    "status": "release-pending",
+    "runtime": "Synthetic Flask dashboard",
+    "exposure": "private",
+    "productionClaim": false,
+    "verifiedAt": null,
+    "expiresAt": null,
+    "evidenceRefs": []
+  },
+  "metrics": [
+    "AUROC, AUPRC, Brier score, and calibration are required before research-result claims"
+  ],
+  "stages": [
+    "Synthetic replay",
+    "Feature engineering",
+    "Modeling",
+    "Calibration",
+    "Synthetic dashboard"
+  ],
+  "architecture": [
+    "Synthetic data",
+    "Hourly features",
+    "Calibrated model",
+    "Flask API",
+    "Synthetic UI"
+  ],
+  "evaluation": [
+    "Patient-level splits, leakage controls, calibration, subgroup analysis, and confidence intervals required"
+  ],
+  "operationalTradeoffs": [
+    "Clinical safety requires an explicit separation between research data and deployable synthetic demonstrations"
+  ],
   "disclaimer": "Educational project only. It is not a clinical device and must not guide care."
 }
