@@ -1,0 +1,20 @@
+flowchart LR
+  subgraph public[Public synthetic research surface]
+    fixture[Seeded synthetic fixture] --> split[Stratified holdout]
+    split --> baseline[Prevalence baseline]
+    split --> challenger[Calibrated Extra Trees]
+    baseline --> evidence[Versioned evaluation evidence]
+    challenger --> evidence
+    evidence --> api[Flask health, timeline, and score API]
+    api --> dashboard[Accessible threshold and timeline dashboard]
+    dashboard --> release[GitHub Actions image release]
+    release --> azure[Azure Container Apps, scale to zero]
+  end
+
+  subgraph local[Local restricted research boundary]
+    mimic[Owner-obtained MIMIC files] --> features[Availability-time feature pipeline]
+    features --> patient_split[Patient-level split]
+    patient_split --> artifacts[Ignored local models and research artifacts]
+  end
+
+  artifacts -. excluded from public repository and image .-> release

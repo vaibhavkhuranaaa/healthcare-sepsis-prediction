@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Synthetic Sepsis Risk Research Demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #526078;
+      --soft: #eef2f8;
+      --line: #d8e0eb;
+      --panel: #ffffff;
+      --page: #f5f7fb;
+      --accent: #334fc4;
+      --accent-dark: #263b92;
+      --accent-soft: #e9edff;
+      --high: #b42318;
+      --high-soft: #fff0ee;
+      --warn: #9a5800;
+      --warn-soft: #fff7e8;
+      --good: #08724f;
+      --good-soft: #eaf8f2;
+      --radius: 14px;
+      --shadow: 0 16px 38px rgba(33, 45, 74, .08);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #eef2fb 0, var(--page) 230px);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    button, input { font: inherit; }
+    button, input[type="range"] { touch-action: manipulation; }
+    button:focus-visible, input:focus-visible, summary:focus-visible, a:focus-visible {
+      outline: 3px solid #8ea2ff;
+      outline-offset: 3px;
+    }
+    [hidden] { display: none !important; }
+
+    .skip-link {
+      position: fixed;
+      z-index: 20;
+      top: 10px;
+      left: 10px;
+      transform: translateY(-160%);
+      border-radius: 8px;
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 14px;
+    }
+    .skip-link:focus { transform: translateY(0); }
+    .shell { width: min(1280px, 100%); margin: 0 auto; padding: 30px 24px 56px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+    .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+    .mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      flex: none;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 24px;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(23, 32, 51, .18);
+    }
+    .brand-name { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+    .brand-context { margin: 1px 0 0; color: var(--muted); font-size: 13px; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      border: 1px solid #bde5d4;
+      border-radius: 999px;
+      background: var(--good-soft);
+      color: #075b41;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .status::before { width: 8px; height: 8px; border-radius: 50%; background: currentColor; content: ""; }
+    .status[data-tone="loading"] { border-color: #cbd5e1; background: #f8fafc; color: #526078; }
+    .status[data-tone="error"] { border-color: #fecaca; background: #fff1f2; color: var(--high); }
+
+    .boundary {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #f4cf8d;
+      border-radius: 12px;
+      background: var(--warn-soft);
+      color: #754000;
+      padding: 13px 15px;
+      font-size: 14px;
+    }
+    .boundary strong { flex: none; }
+    .boundary p { max-width: 80ch; margin: 0; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(280px, .75fr); gap: 20px; align-items: start; }
+    .primary, .rail { min-width: 0; }
+    .primary { display: grid; gap: 20px; }
+    .rail { display: grid; gap: 20px; position: sticky; top: 20px; }
+    .panel { border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); }
+    .panel-inner { padding: 24px; }
+
+    .kicker { margin: 0 0 7px; color: var(--accent-dark); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 18ch; margin-bottom: 10px; font-size: clamp(30px, 3.4vw, 48px); line-height: 1.04; letter-spacing: -.035em; text-wrap: balance; }
+    h2 { margin-bottom: 6px; font-size: 20px; line-height: 1.2; letter-spacing: -.02em; }
+    h3 { margin-bottom: 4px; font-size: 15px; }
+    .lede { max-width: 68ch; margin-bottom: 0; color: var(--muted); font-size: 15px; }
+    .overview { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr); gap: 28px; margin-top: 28px; align-items: end; }
+    .score-label { margin: 0 0 5px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .score-line { display: flex; align-items: baseline; gap: 12px; min-height: 70px; }
+    .score { font-size: clamp(54px, 7vw, 80px); font-weight: 820; line-height: .92; letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
+    .band { border-radius: 999px; background: var(--high-soft); color: var(--high); padding: 5px 9px; font-size: 12px; font-weight: 800; }
+    .score-summary { max-width: 58ch; margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+
+    .threshold { border-radius: 12px; background: var(--soft); padding: 17px; }
+    .threshold-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .threshold-head label { font-size: 14px; font-weight: 800; }
+    .threshold-value { color: var(--accent-dark); font-weight: 850; font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; min-height: 44px; margin: 1px 0; accent-color: var(--accent); cursor: pointer; }
+    .threshold-scale { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
+    .threshold-result { margin: 12px 0 2px; font-size: 14px; font-weight: 750; }
+    .threshold-note { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 26px; border-top: 1px solid var(--line); }
+    .fact { min-width: 0; padding: 17px 16px 0 0; }
+    .fact + .fact { border-left: 1px solid var(--line); padding-left: 16px; }
+    .fact span { display: block; color: var(--muted); font-size: 12px; }
+    .fact strong { display: block; margin-top: 3px; overflow-wrap: anywhere; font-size: 14px; }
+    .signals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 20px; overflow: hidden; border-radius: 11px; background: var(--line); }
+    .signal { min-width: 0; background: #fafbfd; padding: 14px 15px; }
+    .signal span { display: block; color: var(--muted); font-size: 12px; }
+    .signal strong { display: block; margin-top: 2px; font-size: 18px; font-variant-numeric: tabular-nums; }
+    .signal small { display: block; margin-top: 3px; color: var(--high); font-weight: 750; }
+
+    .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+    .section-head p { max-width: 64ch; margin: 0; color: var(--muted); font-size: 14px; }
+    .legend { display: flex; flex: none; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 12px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 18px; height: 3px; border-radius: 3px; background: var(--accent); }
+    .legend .threshold-key { height: 1px; border-top: 2px dashed var(--warn); background: none; }
+    .chart-shell { position: relative; min-height: 260px; margin-top: 18px; border-radius: 11px; background: #f8f9fc; }
+    .chart { display: block; width: 100%; height: 260px; overflow: visible; }
+    .chart-empty { display: grid; min-height: 260px; place-items: center; padding: 30px; text-align: center; }
+    .chart-empty strong { display: block; margin-bottom: 4px; }
+    .chart-empty p { max-width: 46ch; margin: 0; color: var(--muted); font-size: 14px; }
+    .drivers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+    .driver { min-width: 0; border-top: 1px solid var(--line); padding-top: 12px; }
+    .driver span { display: block; color: var(--muted); font-size: 12px; }
+    .driver b { display: block; margin-top: 8px; color: var(--high); font-size: 13px; }
+    .drivers-empty { grid-column: 1 / -1; color: var(--muted); font-size: 14px; }
+
+    .state { border-radius: var(--radius); padding: 18px; }
+    .loading { display: flex; align-items: center; gap: 13px; background: #eef2f7; color: var(--muted); }
+    .spinner { width: 18px; height: 18px; flex: none; border: 2px solid #b9c4d3; border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+    .error { display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid #fecaca; background: #fff4f4; color: #7f1d1d; }
+    .error strong { display: block; }
+    .error p { margin: 2px 0 0; font-size: 13px; }
+    .button { min-height: 44px; flex: none; border: 0; border-radius: 9px; background: var(--ink); color: #fff; padding: 9px 15px; font-weight: 800; cursor: pointer; }
+    .button:hover { background: #2a3855; }
+    .button:active { transform: translateY(1px); }
+    .button:disabled { cursor: not-allowed; opacity: .55; }
+
+    .rail .panel-inner { padding: 21px; }
+    .rail p { color: var(--muted); font-size: 13px; }
+    .boundary-list { display: grid; gap: 0; margin: 17px 0 0; }
+    .boundary-row { display: flex; justify-content: space-between; gap: 14px; border-top: 1px solid var(--line); padding: 11px 0; font-size: 13px; }
+    .boundary-row span { color: var(--muted); }
+    .boundary-row strong { text-align: right; }
+    .method-list { display: grid; gap: 13px; margin: 17px 0 0; padding: 0; list-style: none; }
+    .method-list li { display: grid; grid-template-columns: 24px 1fr; gap: 9px; }
+    .method-list b { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 7px; background: var(--accent-soft); color: var(--accent-dark); font-size: 12px; }
+    .method-list strong { display: block; font-size: 13px; }
+    .method-list span { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+    details { border-top: 1px solid var(--line); margin-top: 18px; padding-top: 14px; }
+    summary { display: flex; min-height: 44px; align-items: center; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 800; }
+    details p { margin: 11px 0 0; }
+    .footer { max-width: 78ch; margin: 24px auto 0; color: var(--muted); font-size: 12px; text-align: center; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+    }
+    @media (max-width: 920px) {
+      .workspace { grid-template-columns: 1fr; }
+      .rail { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px) {
+      .shell { padding: 18px 14px 36px; }
+      .topbar, .boundary, .section-head, .error { align-items: flex-start; }
+      .topbar, .boundary, .section-head, .error { flex-direction: column; }
+      .status { white-space: normal; }
+      .boundary strong { min-width: 0; }
+      .panel-inner { padding: 19px; }
+      .overview { grid-template-columns: 1fr; gap: 20px; margin-top: 23px; }
+      .facts { grid-template-columns: 1fr; }
+      .fact { padding: 13px 0; }
+      .fact + .fact { border-top: 1px solid var(--line); border-left: 0; padding-left: 0; }
+      .signals, .drivers, .rail { grid-template-columns: 1fr; }
+      .legend { margin-top: 7px; }
+      .chart-shell, .chart, .chart-empty { min-height: 230px; height: 230px; }
+      .button { width: 100%; }
+      .score { font-size: 58px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to dashboard</a>
+  <main class="shell" id="main">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">+</div>
+        <div>
+          <p class="brand-name">Sepsis risk research</p>
+          <p class="brand-context">Synthetic public demonstration</p>
+        </div>
+      </div>
+      <div class="status" id="status" data-tone="loading" role="status" aria-live="polite">Connecting to synthetic API</div>
+    </header>
+
+    <section class="boundary" aria-label="Evidence boundary">
+      <strong>Synthetic evidence only</strong>
+      <p>This demonstration explains a modelling workflow with generated observations. It is not a medical device, does not represent any person, and must not guide care.</p>
+    </section>
+
+    <div class="state loading" id="loading" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading the synthetic score, timeline, and evidence context.</span>
+    </div>
+
+    <div class="state error" id="error" role="alert" hidden>
+      <div>
+        <strong>The synthetic API did not respond</strong>
+        <p>Check the local service, then retry. No data was submitted or stored.</p>
+      </div>
+      <button class="button" id="retry" type="button">Retry connection</button>
+    </div>
+
+    <div class="workspace" id="workspace" aria-busy="true">
+      <section class="primary" aria-label="Synthetic case evidence">
+        <article class="panel">
+          <div class="panel-inner">
+            <p class="kicker">Current synthetic window</p>
+            <h1>A probability in context, not a care recommendation.</h1>
+            <p class="lede">Inspect the generated score, compare it with an illustrative review threshold, and see how threshold choice changes the number of flagged windows.</p>
+
+            <div class="overview">
+              <div>
+                <p class="score-label">Synthetic six-hour probability</p>
+                <div class="score-line">
+                  <strong class="score" id="risk">--</strong>
+                  <span class="band" id="band">Loading</span>
+                </div>
+                <p class="score-summary" id="summary">Generated from deterministic observations for interface and evaluation testing only.</p>
+              </div>
+
+              <div class="threshold">
+                <div class="threshold-head">
+                  <label for="threshold">Illustrative review threshold</label>
+                  <output class="threshold-value" id="thresholdValue" for="threshold">60%</output>
+                </div>
+                <input id="threshold" type="range" min="20" max="80" step="5" value="60" aria-describedby="thresholdHelp">
+                <div class="threshold-scale" aria-hidden="true"><span>20%</span><span>80%</span></div>
+                <p class="threshold-result" id="thresholdResult">Waiting for timeline</p>
+                <p class="threshold-note" id="thresholdHelp">For demonstration only. This is not a recommended clinical threshold.</p>
+              </div>
+            </div>
+
+            <div class="facts" role="group" aria-label="Synthetic score context">
+              <div class="fact"><span>Prediction horizon</span><strong>Next 6 hours</strong></div>
+              <div class="fact"><span>Runtime mode</span><strong id="mode">Synthetic demo</strong></div>
+              <div class="fact"><span>Last refresh</span><strong id="updated">Not loaded</strong></div>
+            </div>
+
+            <div class="signals" role="group" aria-label="Generated observations">
+              <div class="signal"><span>Heart rate</span><strong>112 bpm</strong><small>Above reference</small></div>
+              <div class="signal"><span>Mean arterial pressure</span><strong>64 mmHg</strong><small>Below reference</small></div>
+              <div class="signal"><span>Lactate</span><strong>3.4 mmol/L</strong><small>Above reference</small></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-inner">
+            <div class="section-head">
+              <div>
+                <h2>Synthetic risk timeline</h2>
+                <p>Six generated observation windows show non-linear change. Move the threshold above to compare review burden.</p>
+              </div>
+              <div class="legend" role="group" aria-label="Chart legend">
+                <span><i></i> Probability</span>
+                <span><i class="threshold-key"></i> Threshold</span>
+              </div>
+            </div>
+            <div class="chart-shell" id="chartShell">
+              <svg class="chart" id="chart" viewBox="0 0 720 260" role="img" aria-labelledby="chartTitle chartDescription">
+                <title id="chartTitle">Synthetic risk probability over time</title>
+                <desc id="chartDescription">Timeline loading.</desc>
+              </svg>
+              <div class="chart-empty" id="chartEmpty" hidden>
+                <div><strong>No timeline points are available</strong><p>The demo remains usable, but trend and threshold counts need at least one synthetic point.</p></div>
+              </div>
+            </div>
+            <table class="sr-only">
+              <caption>Synthetic timeline values</caption>
+              <thead><tr><th scope="col">Time</th><th scope="col">Probability</th></tr></thead>
+              <tbody id="chartTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-inner">
+            <div class="section-head">
+              <div>
+                <h2>Largest synthetic contributors</h2>
+                <p>Directional terms describe the generated score only. They are not causal explanations.</p>
+              </div>
+            </div>
+            <div class="drivers" id="drivers" aria-live="polite"><p class="drivers-empty">Loading contributor details.</p></div>
+          </div>
+        </article>
+      </section>
+
+      <aside class="rail" aria-label="Evidence and method">
+        <section class="panel">
+          <div class="panel-inner">
+            <h2>Evidence boundary</h2>
+            <p>What this public surface can and cannot establish.</p>
+            <div class="boundary-list">
+              <div class="boundary-row"><span>Data</span><strong>Generated only</strong></div>
+              <div class="boundary-row"><span>Purpose</span><strong>Research workflow</strong></div>
+              <div class="boundary-row"><span>Clinical validity</span><strong>Not established</strong></div>
+              <div class="boundary-row"><span>Care use</span><strong>Not supported</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-inner">
+            <h2>How to inspect it</h2>
+            <p>Three checks keep the score from becoming a context-free headline.</p>
+            <ol class="method-list">
+              <li><b>1</b><div><strong>Start with probability</strong><span>Read it as synthetic output, never as a patient estimate.</span></div></li>
+              <li><b>2</b><div><strong>Move the threshold</strong><span>See review count change across the same six windows.</span></div></li>
+              <li><b>3</b><div><strong>Check the limits</strong><span>Calibration on generated data does not establish clinical performance.</span></div></li>
+            </ol>
+            <details>
+              <summary>Technical method</summary>
+              <p>The public demo uses a deterministic synthetic feature vector and a fixed replay timeline. The repository evaluates a named baseline and calibrated challenger on a separate deterministic synthetic cohort. Restricted research artifacts stay local.</p>
+            </details>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <p class="footer">Synthetic-only research demonstration. No clinical validation, diagnosis, treatment, monitoring, or care guidance.</p>
+  </main>
+
+  <script>
+    const observations = {
+      heart_rate_last: 112,
+      heart_rate_slope_6h: 3,
+      map_last: 64,
+      resp_rate_last: 27,
+      temperature_last: 38.6,
+      spo2_last: 93,
+      wbc_last: 17,
+      creatinine_last: 1.8,
+      lactate_last: 3.4,
+      measurement_count_6h: 12
+    };
+    const names = {
+      heart_rate_last: ["Elevated heart rate", "Above the generated reference"],
+      lactate_last: ["Elevated lactate", "Above the generated reference"],
+      map_last: ["Lower mean arterial pressure", "Below the generated reference"]
+    };
+    const elements = Object.fromEntries([
+      "status", "loading", "error", "retry", "workspace", "risk", "band", "summary", "mode", "updated",
+      "threshold", "thresholdValue", "thresholdResult", "chart", "chartDescription", "chartEmpty", "chartTable", "drivers"
+    ].map(id => [id, document.getElementById(id)]));
+    let timeline = [];
+    let currentRisk = null;
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>'"]/g, character => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;"})[character]);
+    }
+
+    function setStatus(text, tone) {
+      elements.status.textContent = text;
+      elements.status.dataset.tone = tone;
+    }
+
+    function setLoading(loading) {
+      elements.loading.hidden = !loading;
+      elements.workspace.setAttribute("aria-busy", String(loading));
+      elements.retry.disabled = loading;
+    }
+
+    function renderThreshold() {
+      const threshold = Number(elements.threshold.value) / 100;
+      elements.thresholdValue.value = `${Math.round(threshold * 100)}%`;
+      const count = timeline.filter(point => point.risk >= threshold).length;
+      const current = currentRisk === null ? "Current score unavailable." : currentRisk >= threshold ? "Current score is above it." : "Current score is below it.";
+      elements.thresholdResult.textContent = timeline.length ? `${count} of ${timeline.length} windows at or above threshold. ${current}` : `No timeline windows available. ${current}`;
+    }
+
+    function renderChart(points) {
+      timeline = points;
+      elements.chart.hidden = points.length === 0;
+      elements.chartEmpty.hidden = points.length !== 0;
+      elements.chartTable.innerHTML = points.map(point => `<tr><td>${escapeHtml(new Date(point.time).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}))}</td><td>${Math.round(point.risk * 100)}%</td></tr>`).join("");
+      renderThreshold();
+      if (!points.length) {
+        elements.chartDescription.textContent = "No synthetic timeline points are available.";
+        return;
+      }
+
+      const width = 720;
+      const height = 260;
+      const left = 46;
+      const right = 16;
+      const top = 18;
+      const bottom = 36;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+      const x = index => left + (index / Math.max(points.length - 1, 1)) * plotWidth;
+      const y = risk => top + (1 - risk) * plotHeight;
+      const probabilityPath = points.map((point, index) => `${index ? "L" : "M"} ${x(index).toFixed(1)} ${y(point.risk).toFixed(1)}`).join(" ");
+      const threshold = Number(elements.threshold.value) / 100;
+      const ticks = [1, .75, .5, .25, 0];
+      const grid = ticks.map(value => `<line x1="${left}" y1="${y(value)}" x2="${width - right}" y2="${y(value)}" stroke="#dde3ec"/><text x="${left - 9}" y="${y(value) + 4}" text-anchor="end" fill="#65728a" font-size="11">${Math.round(value * 100)}%</text>`).join("");
+      const timeLabels = points.map((point, index) => `<text x="${x(index)}" y="${height - 12}" text-anchor="${index === 0 ? "start" : index === points.length - 1 ? "end" : "middle"}" fill="#65728a" font-size="11">${escapeHtml(new Date(point.time).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}))}</text>`).join("");
+      const dots = points.map((point, index) => `<circle cx="${x(index)}" cy="${y(point.risk)}" r="5" fill="#ffffff" stroke="#334fc4" stroke-width="3"/>`).join("");
+      const area = `${probabilityPath} L ${x(points.length - 1)} ${y(0)} L ${x(0)} ${y(0)} Z`;
+      elements.chart.innerHTML = `
+        <title id="chartTitle">Synthetic risk probability over time</title>
+        <desc id="chartDescription">${points.length} synthetic points from ${Math.round(points[0].risk * 100)} to ${Math.round(points.at(-1).risk * 100)} percent. Illustrative threshold is ${Math.round(threshold * 100)} percent.</desc>
+        ${grid}
+        <path d="${area}" fill="#e6eaff"/>
+        <line x1="${left}" y1="${y(threshold)}" x2="${width - right}" y2="${y(threshold)}" stroke="#9a5800" stroke-width="2" stroke-dasharray="7 6"/>
+        <path d="${probabilityPath}" fill="none" stroke="#334fc4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        ${dots}
+        ${timeLabels}`;
+    }
+
+    function renderDrivers(drivers) {
+      if (!drivers.length) {
+        elements.drivers.innerHTML = '<p class="drivers-empty">No contributor details are available for this synthetic score.</p>';
+        return;
+      }
+      elements.drivers.innerHTML = drivers.map(driver => {
+        const label = names[driver.feature] || [driver.feature.replaceAll("_", " "), "Generated feature"];
+        const direction = driver.contribution > 0 ? "Increases synthetic score" : "Decreases synthetic score";
+        return `<div class="driver"><h3>${escapeHtml(label[0])}</h3><span>${escapeHtml(label[1])}</span><b>${direction}</b></div>`;
+      }).join("");
+    }
+
+    async function fetchJson(url, options) {
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+      return response.json();
+    }
+
+    async function update() {
+      setLoading(true);
+      elements.error.hidden = true;
+      setStatus("Refreshing synthetic evidence", "loading");
+      try {
+        const [health, score, replay] = await Promise.all([
+          fetchJson("/healthz"),
+          fetchJson("/v1/score", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({encounter_id: "synthetic-001", observations})
+          }),
+          fetchJson("/v1/demo/timeline/synthetic-001")
+        ]);
+        currentRisk = score.risk;
+        elements.risk.textContent = `${Math.round(score.risk * 100)}%`;
+        elements.band.textContent = `${score.risk_band} synthetic band`;
+        elements.summary.textContent = "Generated from deterministic observations for interface and evaluation testing only. It does not estimate risk for a real person.";
+        elements.mode.textContent = health.mode.replaceAll("-", " ");
+        elements.updated.textContent = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+        renderDrivers(score.drivers || []);
+        renderChart(replay.points || []);
+        setStatus("Synthetic API connected", "success");
+      } catch (error) {
+        elements.error.hidden = false;
+        setStatus("Synthetic API unavailable", "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    elements.threshold.addEventListener("input", () => renderChart(timeline));
+    elements.retry.addEventListener("click", update);
+    update();
+    window.setInterval(update, 30000);
+  </script>
+</body>
+</html>

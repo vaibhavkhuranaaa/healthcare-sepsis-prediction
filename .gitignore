@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Data
+data/*
+!data/.gitignore
+!data/.gitkeep
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Research artifacts (including MIMIC-derived features, models, and reports)
+artifacts/
+mlruns/
+reports/
+*.parquet
+*.joblib
+# Local tooling
+.gemini/
+**/.gemini/
+.windsurf/
+**/.windsurf/
+.roo/
+**/.roo/
+.continue/
+**/.continue/
+.windsurfrules
+**/.windsurfrules
+.aider*
+**/.aider*
+.github/prompts/
+.github/agents/
+.github/**/*.agent.md
+.vscode/tasks.json
+# Local delivery workspace
+.project/graph-source.sha256
+docs/PROJECT_CONTEXT.md
+docs/takeover-prompt.md
+docs/continuation-guide.md
+.project/
+data/

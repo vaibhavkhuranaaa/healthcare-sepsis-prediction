@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "status": "enabled",
+  "provider": "Azure Container Apps",
+  "workflow": ".github/workflows/publish-image.yml",
+  "deploymentTarget": "https://sepsisriskdemo-api.lemonfield-be5cc375.eastus2.azurecontainerapps.io/",
+  "publicProject": true,
+  "publicSurface": "synthetic-only",
+  "evidence": "evidence/synthetic-baseline-v1.json",
+  "verification": {
+    "url": "https://sepsisriskdemo-api.lemonfield-be5cc375.eastus2.azurecontainerapps.io/healthz",
+    "sourceShaField": "source_sha"
+  },
+  "paidResource": true,
+  "costApprovalRequired": true,
+  "approvalGates": [
+    "deployment",
+    "paid resources",
+    "public release"
+  ]
+}

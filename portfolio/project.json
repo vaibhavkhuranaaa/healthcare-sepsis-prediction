@@ -1,0 +1,494 @@
+{
+  "version": 2,
+  "slug": "healthcare-sepsis-prediction",
+  "title": "Synthetic Sepsis Risk Evaluation Lab",
+  "summary": "A synthetic-only model evaluation lab that compares a prevalence baseline with a calibrated challenger, exposes calibration and threshold tradeoffs, and keeps patient data outside the public system.",
+  "outcome": "On the fixed synthetic holdout, the calibrated Extra Trees challenger improves AUROC from 0.5000 to 0.9796 and Brier score from 0.0475 to 0.0228. The dashboard turns those model results into an inspectable threshold tradeoff without presenting them as clinical evidence.",
+  "industries": [
+    "Healthcare technology"
+  ],
+  "categories": [
+    "AI/ML",
+    "Analytics",
+    "Cloud"
+  ],
+  "stack": [
+    "Python",
+    "scikit-learn",
+    "Flask",
+    "Docker",
+    "GitHub Actions",
+    "Microsoft Azure"
+  ],
+  "githubUrl": "https://github.com/vaibhavkhuranaaa/healthcare-sepsis-prediction",
+  "liveUrl": "https://sepsisriskdemo-api.lemonfield-be5cc375.eastus2.azurecontainerapps.io/",
+  "deployment": {
+    "provider": "Microsoft Azure",
+    "status": "live",
+    "runtime": "Synthetic Flask dashboard on Azure Container Apps",
+    "exposure": "anonymous",
+    "productionClaim": false,
+    "verifiedAt": "2026-08-18T04:35:00Z",
+    "expiresAt": null,
+    "evidenceRefs": [
+      "deployment.live",
+      "data.boundary"
+    ]
+  },
+  "metrics": [
+    "Synthetic holdout AUROC 0.9796 versus 0.5000 for the prevalence-only baseline",
+    "Synthetic holdout AUPRC 0.7472 versus 0.0500 for the prevalence-only baseline",
+    "Synthetic holdout Brier score 0.0228 versus 0.0475 for the prevalence-only baseline; lower is better",
+    "At threshold 0.20, 8.7 of every 100 synthetic rows are marked with sensitivity 0.8667 and positive predictive value 0.5000"
+  ],
+  "stages": [
+    "Generate a fixed synthetic feature cohort",
+    "Freeze a seeded stratified holdout before fitting",
+    "Fit the prevalence baseline and calibrated Extra Trees challenger",
+    "Record discrimination, calibration, leakage, and threshold evidence",
+    "Serve a synthetic-only score and replay timeline",
+    "Let reviewers change the threshold and inspect the workload tradeoff",
+    "Build a source-linked container in GitHub Actions",
+    "Run the public demo in a scale-to-zero Azure Container App"
+  ],
+  "architecture": [
+    "Deterministic synthetic cohort and feature contract",
+    "Seeded stratified training and holdout split",
+    "Prevalence-only reference and calibrated Extra Trees challenger",
+    "Versioned evaluation JSON with fixed calibration bins",
+    "Flask health, timeline, and synthetic scoring API",
+    "Accessible threshold and timeline dashboard",
+    "GitHub Actions container release",
+    "Azure Container Apps scale-to-zero deployment",
+    "Separate ignored local boundary for MIMIC research files and artifacts"
+  ],
+  "evaluation": [
+    "Seeded 1,200-row synthetic fixture with a stratified 75/25 row holdout",
+    "Prevalence-only baseline compared with a single-threaded calibrated Extra Trees challenger",
+    "AUROC, AUPRC, Brier score, and fixed 10-bin expected calibration error",
+    "Sensitivity, positive predictive value, and marked rows per 100 at thresholds 0.10, 0.20, and 0.50",
+    "Train and holdout identifiers are disjoint, the target is excluded from features, and calibration fitting excludes the holdout",
+    "No patient, temporal, subgroup, confidence-interval, external-validation, or workflow-effect evidence"
+  ],
+  "operationalTradeoffs": [
+    "Scale to zero minimizes idle compute but can add a cold start for the first visitor.",
+    "The public image uses deterministic synthetic inputs only; MIMIC files, patient-level derivatives, local models, MLflow runs, and SHAP exports remain excluded.",
+    "The score endpoint is an educational synthetic surface, not a monitored clinical service or operational alerting system.",
+    "The current architecture favors a small inspectable release over load capacity, persistent telemetry, authentication, or uptime guarantees."
+  ],
+  "disclaimer": "Synthetic educational research demo only. It contains no patient data, does not establish clinical validity or utility, does not provide clinical guidance, and must not be used for patient care.",
+  "presentation": {
+    "question": "How do you make a risk-model demo useful to reviewers without turning synthetic metrics into a clinical claim?",
+    "answer": "Start with the cheapest honest baseline, freeze a holdout, calibrate one reproducible challenger, expose threshold consequences, and keep the public data and deployment boundary visibly synthetic.",
+    "decisionSupported": "Whether the calibrated challenger adds enough synthetic evaluation value to justify deeper research, and how an illustrative threshold changes the number and composition of rows marked for review.",
+    "architectureAlt": "System architecture separating the public synthetic evaluation, Flask API, dashboard, container release, and scale-to-zero Azure deployment from the ignored local MIMIC research boundary.",
+    "evaluationMode": "deterministic synthetic holdout evaluation plus live synthetic-only deployment verification",
+    "terms": [
+      {
+        "term": "AUROC",
+        "plainLanguage": "How often a randomly chosen positive row ranks above a randomly chosen negative row.",
+        "projectUse": "Reported on the frozen synthetic holdout and compared with the 0.5000 prevalence reference."
+      },
+      {
+        "term": "AUPRC",
+        "plainLanguage": "How precision and recall trade off when positive rows are uncommon.",
+        "projectUse": "Reported against the 0.0500 synthetic holdout prevalence reference."
+      },
+      {
+        "term": "Brier score",
+        "plainLanguage": "The mean squared error of predicted probabilities; lower is better.",
+        "projectUse": "Used to test whether calibrated probabilities improve on the constant prevalence estimate."
+      },
+      {
+        "term": "Expected calibration error",
+        "plainLanguage": "The weighted gap between predicted probabilities and observed synthetic event rates.",
+        "projectUse": "Calculated across ten fixed probability bins so empty and sparse regions remain visible."
+      },
+      {
+        "term": "Illustrative threshold",
+        "plainLanguage": "A cutoff used to inspect how many synthetic rows would be marked and what those rows contain.",
+        "projectUse": "A review control for synthetic evidence, not a recommended alert or care threshold."
+      }
+    ],
+    "publicationStatus": "Live synthetic research demo. Not for clinical use.",
+    "licenseNote": "Source code is MIT licensed. No dataset is distributed under that license.",
+    "technologyRoles": {
+      "Python": "Synthetic data, evaluation, API, and local research pipeline language",
+      "scikit-learn": "Prevalence baseline, calibrated Extra Trees challenger, and evaluation metrics",
+      "Flask": "Synthetic-only health, timeline, score, and dashboard routes",
+      "Docker": "Locked public runtime boundary",
+      "GitHub Actions": "Linux checks and source-linked AMD64 image publication",
+      "Microsoft Azure": "Scale-to-zero public demo hosting"
+    },
+    "quickStart": [
+      {
+        "label": "Install and verify",
+        "command": "uv sync --frozen --extra dev\nuv run ruff check .\nuv run mypy src\nuv run pytest -q"
+      },
+      {
+        "label": "Regenerate the synthetic evidence",
+        "command": "uv run python -m scripts.evaluate_synthetic --output evidence/synthetic-baseline-v1.json"
+      },
+      {
+        "label": "Run the dashboard locally",
+        "command": "uv sync --frozen\nuv run flask --app src.app run"
+      }
+    ],
+    "securityControls": [
+      {
+        "control": "Public data boundary",
+        "implementation": "Git, CI, and Docker context rules reject patient datasets, patient-level derivatives, research models, delivery state, and generated research artifacts.",
+        "evidenceRefs": [
+          "data.boundary",
+          "ci.release"
+        ],
+        "limitation": "Repository controls do not govern separately stored local research files outside the public workspace."
+      },
+      {
+        "control": "Synthetic-only public scoring",
+        "implementation": "The public score route requires a synthetic encounter identifier and the exact finite feature contract; research-model loading remains disabled unless explicitly enabled locally.",
+        "evidenceRefs": [
+          "api.synthetic-only"
+        ],
+        "limitation": "The synthetic score is a demonstration formula and is not a validated clinical model."
+      },
+      {
+        "control": "Deployed-source verification",
+        "implementation": "The anonymous health route reports the exact source revision injected into the immutable container deployment.",
+        "evidenceRefs": [
+          "deployment.live",
+          "ci.release"
+        ],
+        "limitation": "Revision identity proves source lineage, not uptime, clinical safety, or operational monitoring."
+      }
+    ],
+    "costBoundaries": [
+      {
+        "component": "Azure Container Apps",
+        "boundary": "Consumption environment with zero minimum and two maximum replicas.",
+        "implication": "The demo can cold start and has no availability service-level objective."
+      },
+      {
+        "component": "GitHub Container Registry",
+        "boundary": "Public source-linked image with anonymous pulls.",
+        "implication": "No paid Azure Container Registry is provisioned."
+      },
+      {
+        "component": "Data and observability",
+        "boundary": "No deployed database, storage account, patient artifact, or monitoring workspace.",
+        "implication": "The live demo remains low-cost and inspectable but does not claim persistent telemetry or clinical operations."
+      }
+    ],
+    "repositoryStructure": [
+      {
+        "path": "scripts/evaluate_synthetic.py",
+        "purpose": "Rebuilds the versioned baseline, calibration, leakage, and threshold evidence."
+      },
+      {
+        "path": "evidence/synthetic-baseline-v1.json",
+        "purpose": "Committed aggregate evidence for the fixed synthetic holdout."
+      },
+      {
+        "path": "src/pipeline/",
+        "purpose": "Synthetic generator, leakage-aware feature contracts, labels, training, and evaluation."
+      },
+      {
+        "path": "src/static/",
+        "purpose": "Accessible threshold and timeline dashboard."
+      },
+      {
+        "path": "infra/",
+        "purpose": "Minimal Azure Container Apps deployment with source-revision injection."
+      },
+      {
+        "path": "architecture/system.mmd",
+        "purpose": "Canonical editable architecture used by the portfolio renderer."
+      }
+    ],
+    "verification": [
+      {
+        "check": "Lint and types",
+        "command": "uv run ruff check . && uv run mypy src",
+        "evidenceRef": "ci.release"
+      },
+      {
+        "check": "Tests",
+        "command": "uv run pytest -q",
+        "evidenceRef": "ci.release"
+      },
+      {
+        "check": "Byte-identical synthetic evidence",
+        "command": "uv run python -m scripts.evaluate_synthetic --output /tmp/synthetic-baseline-v1.json && cmp evidence/synthetic-baseline-v1.json /tmp/synthetic-baseline-v1.json",
+        "evidenceRef": "evaluation.holdout"
+      },
+      {
+        "check": "Public container",
+        "command": "docker build -f docker/Dockerfile .",
+        "evidenceRef": "ci.release"
+      }
+    ]
+  },
+  "dataDisclosure": {
+    "source": "Deterministic repository-authored synthetic feature generator for the public evaluation; optional owner-obtained MIMIC files remain local and are not used by the public demo.",
+    "license": "MIT applies to source code. No MIMIC or other dataset is distributed.",
+    "classification": "synthetic",
+    "permittedUse": "Portfolio demonstration, software review, and reproducibility study of the disclosed synthetic evaluation only.",
+    "includedFields": [
+      "Synthetic heart rate, blood-pressure, respiratory, temperature, oxygen, white-cell, creatinine, lactate, slope, and measurement-count features",
+      "Synthetic row labels, aggregate evaluation metrics, fixed calibration bins, and threshold counts",
+      "Synthetic encounter identifiers and a generated replay timeline"
+    ],
+    "excludedFields": [
+      "MIMIC source files and credentials",
+      "Patient, encounter, or stay-level derivatives from any clinical source",
+      "Research feature tables, trained models, MLflow runs, SHAP exports, and local metrics",
+      "Direct identifiers, protected health information, and care records"
+    ],
+    "deployedArtifactContents": [
+      "Flask application source and locked runtime dependencies",
+      "Static synthetic dashboard",
+      "Deterministic synthetic score and replay behavior",
+      "No dataset file, patient artifact, or trained research model"
+    ]
+  },
+  "evidence": [
+    {
+      "id": "evaluation.holdout",
+      "kind": "evaluation",
+      "claim": "The calibrated Extra Trees challenger improves synthetic holdout AUROC, AUPRC, and Brier score over the prevalence-only baseline.",
+      "source": "evidence/synthetic-baseline-v1.json",
+      "method": "Seeded 1,200-row synthetic fixture, stratified 75/25 holdout, prevalence baseline, and three-fold isotonic calibration within training rows only.",
+      "result": "AUROC 0.979649, AUPRC 0.747232, Brier 0.022767",
+      "scope": "300-row fixed synthetic holdout with 15 positive rows",
+      "environment": "Locked Python 3.12 evaluation",
+      "classification": "synthetic",
+      "execution": "deterministic",
+      "caveat": "Synthetic labels are deterministic functions of same-row features and do not estimate clinical performance."
+    },
+    {
+      "id": "evaluation.threshold",
+      "kind": "evaluation",
+      "claim": "At threshold 0.20, the challenger marks 26 of 300 synthetic holdout rows with sensitivity 0.866667 and positive predictive value 0.500000.",
+      "source": "evidence/synthetic-baseline-v1.json",
+      "method": "Deterministic threshold sweep at 0.10, 0.20, and 0.50 on held-out calibrated probabilities.",
+      "result": "8.666667 marked rows per 100 at threshold 0.20",
+      "scope": "Independent synthetic rows without repeat-alert or workflow simulation",
+      "environment": "Locked Python 3.12 evaluation",
+      "classification": "synthetic",
+      "execution": "deterministic",
+      "caveat": "This is an illustrative review workload, not a recommended clinical alert threshold."
+    },
+    {
+      "id": "evaluation.leakage",
+      "kind": "test",
+      "claim": "Train and holdout row identifiers are disjoint, the generated target is excluded from features, and calibration fitting excludes the holdout.",
+      "source": "evidence/synthetic-baseline-v1.json",
+      "method": "Three explicit boundary checks produced during evidence generation.",
+      "result": true,
+      "scope": "Synthetic row-split evaluation contract",
+      "execution": "deterministic",
+      "caveat": "Synthetic rows contain no patient or temporal structure, so the fixture cannot test patient-level or temporal leakage.",
+      "counts": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0
+      }
+    },
+    {
+      "id": "ui.accessibility",
+      "kind": "review",
+      "claim": "The stakeholder and technical dashboard states have zero horizontal overflow and zero automated WCAG A or AA violations at 1440 px and 390 px.",
+      "source": "README.md",
+      "method": "Headless Chrome measurements, automated accessibility checks, and manual keyboard review of threshold, disclosure, loading, empty, error, and retry states.",
+      "result": "0 px overflow and 0 automated violations at both required widths",
+      "scope": "Paired stakeholder and technical dashboard views",
+      "execution": "integration",
+      "caveat": "Two viewports and automated checks do not replace testing across every browser or assistive technology."
+    },
+    {
+      "id": "api.synthetic-only",
+      "kind": "security",
+      "claim": "The public score route rejects non-synthetic identifiers, missing or unexpected features, and non-finite values while keeping research-model loading opt-in and local.",
+      "source": "tests/test_api.py",
+      "method": "Flask test-client contract tests over accepted and refused public requests.",
+      "result": true,
+      "scope": "Public synthetic score and health routes",
+      "execution": "deterministic",
+      "caveat": "Input controls do not make the synthetic score clinically valid."
+    },
+    {
+      "id": "data.boundary",
+      "kind": "disclosure",
+      "claim": "Tracked source and the public container exclude MIMIC files, patient-level derivatives, research models, delivery state, and generated research artifacts.",
+      "source": ".gitignore",
+      "method": "CI purity guard, tracked-file review, ignore rules, and Docker build-context exclusions.",
+      "result": true,
+      "scope": "Public Git repository and deployed container",
+      "classification": "synthetic-only public boundary",
+      "execution": "integration",
+      "caveat": "Owner-managed local research storage remains a separate governed boundary."
+    },
+    {
+      "id": "ci.release",
+      "kind": "test",
+      "claim": "Linux CI installs the locked environment, verifies the public boundary, runs lint, types, and tests, and builds the release container.",
+      "source": ".github/workflows/ci.yml",
+      "method": "Required GitHub Actions test job on the exact default-branch release candidate.",
+      "result": true,
+      "scope": "Public source, deterministic evidence, and container release",
+      "environment": "GitHub-hosted Linux runner",
+      "execution": "integration"
+    },
+    {
+      "id": "deployment.live",
+      "kind": "deployment",
+      "claim": "The anonymous Azure Container App serves the synthetic dashboard and reports the exact deployed source revision with zero minimum replicas.",
+      "source": "https://sepsisriskdemo-api.lemonfield-be5cc375.eastus2.azurecontainerapps.io/healthz",
+      "method": "HTTPS health request plus Azure inspection of image identity, provisioning state, and scale configuration.",
+      "result": true,
+      "scope": "One scale-to-zero synthetic research demo",
+      "observedAt": "2026-08-18T04:35:00Z",
+      "environment": "Azure Container Apps Consumption",
+      "classification": "synthetic-only anonymous demo",
+      "execution": "live",
+      "caveat": "The deployment has no availability objective, authentication, clinical monitoring, or production claim."
+    }
+  ],
+  "story": {
+    "recruiterSummary": "Risk-model portfolios often lead with a strong score and leave the harder questions unanswered: compared with what, calibrated how, at what review burden, and on which data boundary? This project makes those questions the product. A reviewer can compare the calibrated challenger with a prevalence baseline, change an illustrative threshold, inspect the resulting workload, and trace every public claim to deterministic synthetic evidence.",
+    "technicalNarrative": "A fixed synthetic generator creates the public cohort, then a seeded stratified split freezes training and holdout rows before fitting. The baseline predicts training prevalence. A single-threaded Extra Trees classifier receives three-fold isotonic calibration inside the training partition, chosen after a fixed-seed XGBoost result proved platform-sensitive. The evaluation command emits aggregate discrimination, calibration, leakage, and threshold evidence as versioned JSON. Flask serves health, synthetic timeline, and strictly validated synthetic-score routes; GitHub Actions tests the release and publishes a source-linked AMD64 image; Azure Container Apps runs that image with zero minimum replicas. MIMIC files and every patient-level derivative remain in an ignored local boundary and never enter the public repository or image.",
+    "scalabilityRoadmap": [
+      "Keep the current public surface small until a real research cohort, external validation plan, and clinical governance owner exist.",
+      "If repeated-row workflows are studied, add patient-level temporal evaluation, alert deduplication, cooldown rules, and workload simulation before interpreting alert burden.",
+      "If traffic exceeds portfolio review volume, add measured request limits, durable telemetry, cost alerts, and an explicit availability objective before increasing replicas.",
+      "Do not connect the demo to clinical systems or care workflows without prospective validation, subgroup analysis, security review, and formal safety governance."
+    ],
+    "executiveSummary": "The challenger clearly beats the prevalence-only reference on this fixed synthetic fixture, while the product remains explicit about what that does not prove. At threshold 0.20 it marks 8.7 rows per 100 with 86.7% synthetic sensitivity and 50.0% positive predictive value. That tradeoff is useful for reviewing model behavior, not for selecting a clinical alert threshold.",
+    "intendedUser": "A data-science hiring manager, model reviewer, or technical stakeholder assessing reproducibility, calibration, threshold communication, and public data boundaries.",
+    "example": {
+      "title": "Review whether the challenger deserves deeper research",
+      "steps": [
+        "Confirm that the surface is synthetic-only and read the excluded-use disclosure",
+        "Compare AUROC, AUPRC, and Brier score with the prevalence-only baseline",
+        "Inspect fixed calibration bins and the limits of the row-level holdout",
+        "Move the illustrative threshold and compare sensitivity, positive predictive value, and marked rows per 100",
+        "Open the technical method and trace the displayed claims to versioned evidence",
+        "Review the local MIMIC boundary, deployment limits, and next validation work before drawing any broader conclusion"
+      ]
+    },
+    "technologyDecisions": [
+      {
+        "technology": "Calibrated Extra Trees",
+        "rationale": "A single-threaded tree ensemble preserves nonlinear synthetic ranking while producing byte-stable evidence across macOS and Linux.",
+        "alternative": "Calibrated XGBoost",
+        "tradeoff": "The deterministic challenger gives up some synthetic AUPRC but avoids platform-dependent public evidence."
+      },
+      {
+        "technology": "Prevalence-only baseline and frozen holdout",
+        "rationale": "The cheapest credible reference and a pre-fit holdout make improvement and calibration claims interpretable.",
+        "alternative": "Report challenger metrics without a named baseline",
+        "tradeoff": "One small synthetic holdout is easy to reproduce but cannot estimate uncertainty, transportability, or patient-level performance."
+      },
+      {
+        "technology": "Native HTML, CSS, and SVG dashboard",
+        "rationale": "The threshold control, timeline, table, and disclosure states need accessible browser primitives more than a charting framework.",
+        "alternative": "Add a component or visualization dependency",
+        "tradeoff": "The project owns a small amount of rendering code but keeps the public runtime and interaction model compact."
+      },
+      {
+        "technology": "Azure Container Apps with a public GHCR image",
+        "rationale": "A scale-to-zero container provides a verifiable HTTPS demo without a paid registry, database, or always-on replica.",
+        "alternative": "Provision Azure Container Registry and an always-on service",
+        "tradeoff": "Cold starts and minimal observation are accepted for a low-traffic portfolio surface."
+      }
+    ],
+    "evidence": [
+      {
+        "value": "0.9796",
+        "label": "Synthetic holdout AUROC",
+        "context": "Calibrated Extra Trees versus 0.5000 for the prevalence-only baseline on 300 fixed holdout rows.",
+        "method": "Seeded row holdout with calibration fitted inside training rows only.",
+        "meaning": "The challenger ranks positive synthetic rows well above the constant reference.",
+        "threshold": "Must exceed the 0.5000 baseline.",
+        "interpretation": "Strong synthetic ranking evidence, not clinical discrimination evidence.",
+        "evidenceRefs": [
+          "evaluation.holdout"
+        ]
+      },
+      {
+        "value": "0.0228",
+        "label": "Synthetic holdout Brier score",
+        "context": "Calibrated challenger versus 0.0475 for the constant 5% prevalence estimate.",
+        "method": "Mean squared probability error on the fixed synthetic holdout.",
+        "meaning": "The calibrated probabilities improve on the cheapest constant estimate.",
+        "threshold": "Must be lower than the 0.0475 baseline.",
+        "interpretation": "Better probability accuracy on the disclosed synthetic generator only.",
+        "evidenceRefs": [
+          "evaluation.holdout"
+        ]
+      },
+      {
+        "value": "8.7 per 100",
+        "label": "Rows marked at threshold 0.20",
+        "context": "26 of 300 holdout rows, with synthetic sensitivity 0.8667 and positive predictive value 0.5000.",
+        "method": "Deterministic threshold sweep over held-out calibrated probabilities.",
+        "meaning": "The review-volume consequence of one illustrative cutoff.",
+        "threshold": "Illustrative threshold 0.20; no clinical threshold is recommended.",
+        "interpretation": "Useful for understanding workload tradeoffs, not staffing or care decisions.",
+        "evidenceRefs": [
+          "evaluation.threshold"
+        ]
+      },
+      {
+        "value": "0 px / 0 violations",
+        "label": "Required responsive and automated accessibility checks",
+        "context": "Stakeholder and technical states at 1440 px and 390 px.",
+        "method": "Headless browser overflow measurement, automated WCAG checks, and manual keyboard review.",
+        "meaning": "The evidence and controls remain reachable on desktop and mobile without detected A or AA violations.",
+        "interpretation": "A focused release check, not exhaustive assistive-technology certification.",
+        "evidenceRefs": [
+          "ui.accessibility"
+        ]
+      }
+    ],
+    "limitations": [
+      "Synthetic labels are deterministic functions of same-row features, so the task is easier than real-world prediction.",
+      "Rows have no patient, site, subgroup, or temporal structure; the evaluation cannot establish patient-level leakage control or transportability.",
+      "The evidence has no confidence intervals, external validation, subgroup analysis, drift study, prospective workflow, or intervention effect.",
+      "Threshold counts treat rows independently and do not model repeat alerts, suppression, staffing, or clinical workflow.",
+      "The anonymous scale-to-zero demo has no availability objective, authentication, durable telemetry, or clinical monitoring.",
+      "No result establishes clinical validity, clinical utility, safety, or suitability for patient care."
+    ]
+  },
+  "resume": {
+    "bulletCandidates": [
+      {
+        "role": "Data Scientist",
+        "bullet": "Built a platform-stable synthetic model evaluation that compares a calibrated Extra Trees challenger with a prevalence baseline, improving holdout AUROC from 0.5000 to 0.9796 and Brier score from 0.0475 to 0.0228 with versioned calibration and threshold evidence.",
+        "evidenceRefs": [
+          "evaluation.holdout",
+          "evaluation.threshold",
+          "evaluation.leakage"
+        ]
+      },
+      {
+        "role": "Machine Learning Engineer",
+        "bullet": "Designed leakage-aware feature and release contracts that use availability time, preserve patient-level splitting for local research, reject unsafe public score payloads, and keep MIMIC data, derived rows, models, and explanations outside Git and the deployed image.",
+        "evidenceRefs": [
+          "evaluation.leakage",
+          "api.synthetic-only",
+          "data.boundary"
+        ]
+      },
+      {
+        "role": "Analytics Product Engineer",
+        "bullet": "Delivered an accessible threshold and timeline dashboard with explicit loading, empty, error, and retry states, verified at 1440 px and 390 px, then released it through green Linux CI to a source-verified scale-to-zero Azure Container App.",
+        "evidenceRefs": [
+          "ui.accessibility",
+          "ci.release",
+          "deployment.live"
+        ]
+      }
+    ]
+  }
+}
